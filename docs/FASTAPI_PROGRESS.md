@@ -11,8 +11,8 @@
 
 | 단계 | 주제 | 핵심 학습 키워드 | 미션 가이드 문서 | 상태 |
 | :--- | :--- | :--- | :--- | :---: |
-| **Step 1** | **환경 세팅 & 첫 서버 구동 (Health Probe)** | `venv`, `uvicorn`, `@app.get`, `/healthz` | [`step-01-setup-and-healthz.md`](./missions/fastapi/step-01-setup-and-healthz.md) | 🔄 **진행 중** |
-| **Step 2** | **Pydantic v2 데이터 검증 & 스키마 설계** | `BaseModel`, `Field`, `Enum`, Request/Response | *(Step 1 완료 후 오픈)* | ⏳ 대기 |
+| **Step 1** | **환경 세팅 & 첫 서버 구동 (Health Probe)** | `venv`, `uvicorn`, `@app.get`, `/healthz` | [`step-01-setup-and-healthz.md`](./missions/fastapi/step-01-setup-and-healthz.md) | ✅ **완료** |
+| **Step 2** | **Pydantic v2 데이터 검증 & 스키마 설계** | `BaseModel`, `Field`, `Enum`, Request/Response | [`step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md) | 🔄 **진행 중** |
 | **Step 3** | **경로/쿼리 파라미터 & 예외 처리** | `Path`, `Query`, `HTTPException`, Status Code | *(대기)* | ⏳ 대기 |
 | **Step 4** | **`pytest`로 내 API 자동 테스트하기** | `TestClient`, `httpx.AsyncClient`, 단위 테스트 | *(대기)* | ⏳ 대기 |
 | **Step 5** | **비동기 원리 (`async def` vs `def`) & 파일 업로드** | 이벤트 루프 블로킹 원리, `UploadFile`, 로컬 저장 | *(대기)* | ⏳ 대기 |
@@ -23,16 +23,18 @@
 ---
 
 ## 📌 현재 활성 미션 요약
-* **현재 스텝**: **Step 1 — 가상환경 세팅 & 첫 서버 띄우기 (`/healthz`)**
-* **가이드 위치**: [`docs/missions/fastapi/step-01-setup-and-healthz.md`](./missions/fastapi/step-01-setup-and-healthz.md)
+* **현재 스텝**: **Step 2 — Pydantic v2 데이터 검증 & 스키마 설계**
+* **가이드 위치**: [`docs/missions/fastapi/step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md)
 * **체크 대상**:
-  1. `.venv` 가상환경 생성 및 패키지 설치 여부
-  2. `requirements.txt` 작성 여부
-  3. `app/api/main.py`의 `GET /` 및 `GET /healthz` 구현 여부
+  1. `app/api/schemas.py` 신규 생성 (`TaskType`, `JobStatus`, `JobCreateRequest`, `JobResponse`)
+  2. `app/api/main.py`에 `POST /jobs` 엔드포인트 구현 (상태코드 201, `response_model=JobResponse`)
+  3. Swagger(`/docs`)에서 정상 요청(201) 및 유효성 검증 실패(422) 동작 확인
 
 ---
 
 ## 📝 학습 히스토리 & 코드 리뷰 노트 (Agent Updated)
-* **2026-10-23**:
-  * 로컬 우선(Local-First) FastAPI 8단계 커리큘럼 수립.
-  * 미션 전용 폴더(`docs/missions/fastapi/`, `docs/missions/cka/`) 분리 및 [`step-01-setup-and-healthz.md`](./missions/fastapi/step-01-setup-and-healthz.md) 오픈.
+* **2026-10-23 (Step 1 완료)**:
+  * `.venv` 가상환경 구축 및 `fastapi[standard]`, `pytest`, `httpx` 설치 확인.
+  * `app/api/main.py`에 기본 루트 엔드포인트(`GET /`)와 헬스 체크 엔드포인트(`GET /healthz`) 구현 및 자동 테스트 통과.
+  * **💡 실전 코칭 포인트**: 윈도우 터미널 재실행 시 가상환경 활성화(`.\.venv\Scripts\Activate.ps1`) 필수 확인 습관화. 쿠버네티스 Liveness Probe 연동 시 `/healthz`가 200 OK를 반환해야 파드가 재시작(Restart loop)에 빠지지 않는다는 점 이해.
+  * Step 2 가이드([`step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md)) 오픈 및 진행 시작.
