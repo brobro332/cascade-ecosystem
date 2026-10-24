@@ -12,8 +12,8 @@
 | 단계 | 주제 | 핵심 학습 키워드 | 미션 가이드 문서 | 상태 |
 | :--- | :--- | :--- | :--- | :---: |
 | **Step 1** | **환경 세팅 & 첫 서버 구동 (Health Probe)** | `venv`, `uvicorn`, `@app.get`, `/healthz` | [`step-01-setup-and-healthz.md`](./missions/fastapi/step-01-setup-and-healthz.md) | ✅ **완료** |
-| **Step 2** | **Pydantic v2 데이터 검증 & 스키마 설계** | `BaseModel`, `Field`, `Enum`, Request/Response | [`step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md) | 🔄 **진행 중** |
-| **Step 3** | **경로/쿼리 파라미터 & 예외 처리** | `Path`, `Query`, `HTTPException`, Status Code | *(대기)* | ⏳ 대기 |
+| **Step 2** | **Pydantic v2 데이터 검증 & 스키마 설계** | `BaseModel`, `Field`, `Enum`, Request/Response | [`step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md) | ✅ **완료** |
+| **Step 3** | **경로/쿼리 파라미터 & 예외 처리** | `Path`, `Query`, `HTTPException`, Status Code | [`step-03-parameters-and-exceptions.md`](./missions/fastapi/step-03-parameters-and-exceptions.md) | 🔄 **진행 중** |
 | **Step 4** | **`pytest`로 내 API 자동 테스트하기** | `TestClient`, `httpx.AsyncClient`, 단위 테스트 | *(대기)* | ⏳ 대기 |
 | **Step 5** | **비동기 원리 (`async def` vs `def`) & 파일 업로드** | 이벤트 루프 블로킹 원리, `UploadFile`, 로컬 저장 | *(대기)* | ⏳ 대기 |
 | **Step 6** | **의존성 주입 (`Depends`) & 환경변수 (`pydantic-settings`)** | `Depends`, `BaseSettings`, 설정 분리 & Mocking | *(대기)* | ⏳ 대기 |
@@ -23,18 +23,24 @@
 ---
 
 ## 📌 현재 활성 미션 요약
-* **현재 스텝**: **Step 2 — Pydantic v2 데이터 검증 & 스키마 설계**
-* **가이드 위치**: [`docs/missions/fastapi/step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md)
+* **현재 스텝**: **Step 3 — 경로/쿼리 파라미터 & HTTPException 예외 처리**
+* **가이드 위치**: [`docs/missions/fastapi/step-03-parameters-and-exceptions.md`](./missions/fastapi/step-03-parameters-and-exceptions.md)
 * **체크 대상**:
-  1. `app/api/schemas.py` 신규 생성 (`TaskType`, `JobStatus`, `JobCreateRequest`, `JobResponse`)
-  2. `app/api/main.py`에 `POST /jobs` 엔드포인트 구현 (상태코드 201, `response_model=JobResponse`)
-  3. Swagger(`/docs`)에서 정상 요청(201) 및 유효성 검증 실패(422) 동작 확인
+  1. `jobs_db: dict[str, JobResponse]` 인메모리 저장소 연동
+  2. `GET /jobs/{job_id}` 경로 파라미터 및 `HTTPException(404)` 구현
+  3. `GET /jobs` 쿼리 파라미터(`status`, `limit`) 필터링/페이징 구현
+  4. Swagger(`/docs`)에서 정상 조회(200), 미존재(404), 쿼리 유효성 오류(422) 동작 확인
 
 ---
 
 ## 📝 학습 히스토리 & 코드 리뷰 노트 (Agent Updated)
+* **2026-10-25 (Step 2 완료)**:
+  * `app/api/schemas.py`에 `TaskType(str, Enum)`, `JobStatus(str, Enum)`, `JobCreateRequest(BaseModel)`, `JobResponse(BaseModel)` 설계 완료.
+  * `app/api/main.py`에 `POST /jobs` 엔드포인트 구현 (상태코드 `201 Created` 및 `JobResponse` 반환 타입 힌트 활용).
+  * 자동 테스트(정상 등록, 잘못된 task_type, 범위 초과 priority, 빈 파일명 등 `422 Unprocessable Entity` 검증) 100% 통과.
+  * **💡 코드 리뷰 팁**: `app/api/schemas.py` 상단에 사용하지 않는 `from fastapi import FastAPI` 임포트가 남아 있습니다. 실행에는 지장이 없으나 불필요한 의존성을 줄이기 위해 정리해 주면 더욱 깔끔한 코드가 됩니다.
+  * Step 3 가이드([`step-03-parameters-and-exceptions.md`](./missions/fastapi/step-03-parameters-and-exceptions.md)) 오픈 및 진행 시작.
 * **2026-10-23 (Step 1 완료)**:
   * `.venv` 가상환경 구축 및 `fastapi[standard]`, `pytest`, `httpx` 설치 확인.
   * `app/api/main.py`에 기본 루트 엔드포인트(`GET /`)와 헬스 체크 엔드포인트(`GET /healthz`) 구현 및 자동 테스트 통과.
   * **💡 실전 코칭 포인트**: 윈도우 터미널 재실행 시 가상환경 활성화(`.\.venv\Scripts\Activate.ps1`) 필수 확인 습관화. 쿠버네티스 Liveness Probe 연동 시 `/healthz`가 200 OK를 반환해야 파드가 재시작(Restart loop)에 빠지지 않는다는 점 이해.
-  * Step 2 가이드([`step-02-pydantic-validation.md`](./missions/fastapi/step-02-pydantic-validation.md)) 오픈 및 진행 시작.
