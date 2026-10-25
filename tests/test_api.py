@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from app.api.main import app, jobs_db
 from app.api.config import Settings, get_settings
 from pathlib import Path
+from app.api.k8s_client import get_k8s_dispatcher
 
 client = TestClient(app)
 
@@ -103,3 +104,31 @@ def test_readyz_and_background_worker():
 
     response3 = client.get(f"/jobs/{response2.json()["job_id"]}")
     assert response3.json()["status"] == "completed"
+
+def test_create_k8s_batch_job_with_mock_dispatcher():
+    captured = {}
+
+    class FakeK8sDispatcher:
+        def dispatch(self, namespace: str, k8s_job) -> str:
+            captured["namespace"] = namespace
+            captured["k8s_job"] = k8s_job
+            return k8s_job.metadata.name
+
+    app.dependency_overrides[get_k8s_dispatcher] = lambda: FakeK8sDispatcher()
+
+    try:
+        res = client.post(
+            "/jobs/k8s",
+            json={"task_type": "summary", "target_file": "manual.pdf", "priority": 5},
+        )
+        assert res.status_code == 201
+        assert res.json()["status"] == "processing"
+
+        assert captured["namespace"] == "kube-pipeline"
+        v1_job = captured["k8s_job"]
+        assert v1_job.api_version == "batch/v1"
+        assert v1_job.kind == "Job"
+        assert v1_job.spec.template.spec.restart_policy == "Never"
+        assert v1_job.spec.template.spec.containers[0].name == "heavy-worker"
+    finally:
+        app.dependency_overrides.clear()

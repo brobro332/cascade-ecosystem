@@ -4,6 +4,7 @@ from app.worker.processor import process_job_in_background
 from app.api.config import Settings, get_settings
 from app.api.schemas import JobCreateRequest, JobResponse, JobStatus, TaskType
 from pathlib import Path
+from app.api.k8s_client import K8sJobDispatcher, build_k8s_job_object, get_k8s_dispatcher
 import uuid
 
 @asynccontextmanager
@@ -112,3 +113,25 @@ def read_readyz():
         raise HTTPException(status_code=503, detail="Service not ready")
     else:
         return {"status": "ready"}
+
+@app.post("/jobs/k8s", status_code=201)
+def create_k8s_batch_job(
+    job_req: JobCreateRequest,
+    dispatcher: K8sJobDispatcher = Depends(get_k8s_dispatcher),
+) -> JobResponse:
+    new_id = f"k8s-job-{uuid.uuid4().hex[:8]}"
+
+    k8s_job = build_k8s_job_object(new_id, job_req)
+
+    dispatched_name = dispatcher.dispatch(namespace="kube-pipeline", k8s_job=k8s_job)
+
+    new_job = JobResponse(
+        job_id=dispatched_name,
+        task_type=job_req.task_type,
+        target_file=job_req.target_file,
+        priority=job_req.priority,
+        status=JobStatus.PROCESSING,
+        message=f"Dispatched to Kubernetes Job '{dispatched_name}' in namespace 'kube-pipeline'",
+    )
+    jobs_db[new_id] = new_job
+    return new_job

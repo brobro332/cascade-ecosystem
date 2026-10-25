@@ -4,3 +4,4 @@ httpx
 httpx2
 python-multipart
 pydantic-settings
+kubernetes

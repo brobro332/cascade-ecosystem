@@ -43,10 +43,10 @@
 
 ## Track B: FastAPI & Python K8s SDK 정복 트랙 — `app/`
 
-- [ ] **F-1. 프로젝트 구조 & Lifespan 설계 (`app/api/main.py`)**: `@asynccontextmanager` 기반 Lifespan, `/healthz` & `/readyz` Probe 엔드포인트 구현
-- [ ] **F-2. Pydantic v2 스키마 & `pydantic-settings` (`app/api/schemas.py`, `config.py`)**: 환경변수 바인딩, 작업 상태 Enum, 요청/응답 모델 검증
-- [ ] **F-3. 의존성 주입 (`Depends`) & 비동기 파일 업로드 (`UploadFile`)**: 대용량 파일을 메모리에 다 올리지 않고 청크 단위로 안전하게 공유 스토리지(PVC)에 저장하고 Redis 큐에 적재
-- [ ] **F-4. `async def` vs `def` & 백그라운드 워커 (`app/worker/`)**: Pillow 이미지 리사이징/워터마크 및 문서 요약 워커 구현 (노드/파드/아키텍처 메타데이터 기록)
-- [ ] **F-5. 공식 `kubernetes` Python Client 연동 (`app/api/k8s_client.py`)**: `BatchV1Api`를 사용하여 FastAPI 엔드포인트에서 K8s `Job`을 동적으로 생성하고 파드 상태를 조회
-- [ ] **F-6. 테스트 하네스 (`tests/`)**: `pytest` + `httpx.AsyncClient` + `dependency_overrides`로 K8s/Redis 모킹 단위 테스트 작성
-- [ ] **F-7. 멀티 아키텍처 빌드 (`docker buildx`)**: `linux/arm64`(라즈베리파이) + `linux/amd64`(노트북) 동시 지원 이미지 빌드 및 배포
+- [x] **F-1. 프로젝트 구조 & Lifespan 설계 (`app/api/main.py`)**: `@asynccontextmanager` 기반 Lifespan, `/healthz` & `/readyz` Probe 엔드포인트 구현
+- [x] **F-2. Pydantic v2 스키마 & `pydantic-settings` (`app/api/schemas.py`, `config.py`)**: 환경변수 바인딩, 작업 상태 Enum, 요청/응답 모델 검증
+- [x] **F-3. 의존성 주입 (`Depends`) & 비동기 파일 업로드 (`UploadFile`)**: 대용량 파일을 메모리에 다 올리지 않고 청크 단위로 안전하게 공유 스토리지(PVC)에 저장하고 큐에 적재
+- [x] **F-4. `async def` vs `def` & 백그라운드 워커 (`app/worker/`)**: 워커 구현 (노드/파드/아키텍처 메타데이터 기록)
+- [x] **F-5. 공식 `kubernetes` Python Client 연동 (`app/api/k8s_client.py`)**: `BatchV1Api`를 사용하여 FastAPI 엔드포인트에서 K8s `Job`을 동적으로 생성하고 파드 상태를 조회
+- [x] **F-6. 테스트 하네스 (`tests/`)**: `pytest` + `TestClient` + `dependency_overrides`로 K8s/설정을 모킹한 단위 테스트 작성
+- [ ] **F-7. 멀티 아키텍처 빌드 (`docker buildx`)**: `linux/arm64`(라즈베리파이) + `linux/amd64`(노트북) 동시 지원 이미지 빌드 및 배포 (CKA 트랙 연동 시 진행)
