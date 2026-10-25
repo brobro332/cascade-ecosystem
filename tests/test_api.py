@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.api.main import app, jobs_db
+from app.api.config import Settings, get_settings
 from pathlib import Path
 
 client = TestClient(app)
@@ -71,3 +72,23 @@ def test_upload_empty_file_returns_400():
     )
 
     assert response.status_code == 400
+
+def test_settings_override(tmp_path: Path):
+    def get_test_settings() -> Settings:
+        return Settings(upload_dir=tmp_path, node_name="k8s-worker-laptop")
+
+    app.dependency_overrides[get_settings] = get_test_settings
+
+    try:
+        root_res = client.get("/")
+        assert root_res.status_code == 200
+        assert root_res.json()["node_name"] == "k8s-worker-laptop"
+
+        up_res = client.post(
+            "/jobs/upload",
+            files={"file": ("override_test.txt", b"hello-k8s", "text/plain")},
+        )
+        assert up_res.status_code == 201
+        assert (tmp_path / "override_test.txt").exists()
+    finally:
+        app.dependency_overrides.clear()

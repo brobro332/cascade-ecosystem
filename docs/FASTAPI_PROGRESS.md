@@ -16,32 +16,35 @@
 | **Step 3** | **경로/쿼리 파라미터 & 예외 처리** | `Path`, `Query`, `HTTPException`, Status Code | [`step-03-parameters-and-exceptions.md`](./missions/fastapi/step-03-parameters-and-exceptions.md) | ✅ **완료** |
 | **Step 4** | **`pytest`로 내 API 자동 테스트하기** | `TestClient`, `httpx.AsyncClient`, 단위 테스트 | [`step-04-pytest-testing.md`](./missions/fastapi/step-04-pytest-testing.md) | ✅ **완료** |
 | **Step 5** | **비동기 원리 (`async def` vs `def`) & 파일 업로드** | 이벤트 루프 블로킹 원리, `UploadFile`, 로컬 저장 | [`step-05-async-and-file-upload.md`](./missions/fastapi/step-05-async-and-file-upload.md) | ✅ **완료** |
-| **Step 6** | **의존성 주입 (`Depends`) & 환경변수 (`pydantic-settings`)** | `Depends`, `BaseSettings`, 설정 분리 & Mocking | [`step-06-depends-and-settings.md`](./missions/fastapi/step-06-depends-and-settings.md) | 🔄 **진행 중** |
-| **Step 7** | **Lifespan 관리 & 백그라운드 워커/큐 연동** | `@asynccontextmanager`, `BackgroundTasks` vs Redis | *(대기)* | ⏳ 대기 |
+| **Step 6** | **의존성 주입 (`Depends`) & 환경변수 (`pydantic-settings`)** | `Depends`, `BaseSettings`, 설정 분리 & Mocking | [`step-06-depends-and-settings.md`](./missions/fastapi/step-06-depends-and-settings.md) | ✅ **완료** |
+| **Step 7** | **Lifespan 관리 & 백그라운드 워커/큐 연동** | `@asynccontextmanager`, `/readyz`, `BackgroundTasks` | [`step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md) | 🔄 **진행 중** |
 | **Step 8** | **공식 `kubernetes` Python Client 연동** | `BatchV1Api`로 K8s `Job` 동적 생성 (로컬 → 클러스터) | *(대기)* | ⏳ 대기 |
 
 ---
 
 ## 📌 현재 활성 미션 요약
-* **현재 스텝**: **Step 6 — 의존성 주입 (`Depends`) & 환경변수 설정 (`pydantic-settings`)**
-* **가이드 위치**: [`docs/missions/fastapi/step-06-depends-and-settings.md`](./missions/fastapi/step-06-depends-and-settings.md)
+* **현재 스텝**: **Step 7 — Lifespan 관리 (`/readyz`) & 백그라운드 워커 (`BackgroundTasks`)**
+* **가이드 위치**: [`docs/missions/fastapi/step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md)
 * **체크 대상**:
-  1. `tests/test_api.py` 73번 줄 `assert response.status_code == 400` (`assert` 키워드 보완)
-  2. `pydantic-settings` 설치 및 `app/api/config.py` (`Settings`, `get_settings`) 작성 여부
-  3. `app/api/main.py`에서 하드코딩된 `UPLOAD_DIR` 제거 및 `Depends(get_settings)` 주입 확인
-  4. `tests/test_api.py`에서 `app.dependency_overrides[get_settings]` 테스트 통과(`8 passed`) 여부
+  1. `app/worker/processor.py` 생성 및 `process_job_in_background` 구현 여부
+  2. `app/api/main.py`에 `@asynccontextmanager` 기반 `lifespan` 및 `GET /readyz` 추가 여부
+  3. `POST /jobs`, `POST /jobs/upload`에 `BackgroundTasks` 연동 여부
+  4. `tests/test_api.py` 업데이트 및 `pytest -v` (`9 passed`) 통과 여부
 
 ---
 
 ## 📝 학습 히스토리 & 코드 리뷰 노트 (Agent Updated)
+* **2026-10-25 (Step 6 완료)**:
+  * `app/api/config.py`에 `Settings(BaseSettings)` 및 `get_settings()` 구현 완료.
+  * `app/api/main.py`에서 함수 매개변수(`settings: Settings = Depends(get_settings)`)를 통한 의존성 주입 적용 완료.
+  * `tests/test_api.py` 74번 줄 `assert response.status_code == 400` 보완 및 `app.dependency_overrides[get_settings]`를 활용한 임시 폴더(`tmp_path`) 오버라이드 테스트 통과 (`8 passed in 0.53s`).
+  * **💡 오답/디버깅 노트**:
+    * `Depends(...)`는 함수 몸통(Body) 안이 아니라 반드시 **엔드포인트 함수의 매개변수 괄호 안**에 선언해야 FastAPI가 호출 시점에 실제 객체로 주입해 줌을 직접 경험하며 체득!
+  * Step 7 가이드([`step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md)) 오픈.
 * **2026-10-25 (Step 5 완료)**:
-  * `python-multipart` 설치 및 `requirements.txt`, `.gitignore`(`storage/`) 반영 확인.
-  * `app/api/main.py`에 `async def upload_job` (`POST /jobs/upload`) 구현 완료: `await file.read()`로 비동기 파일 바이트 읽기, 0바이트 빈 파일 `400 Bad Request` 처리, `pathlib.Path`를 통한 `storage/uploads/` 디스크 저장 및 `jobs_db` 등록까지 완벽히 동작!
-  * **⚠️ 중요 코드 리뷰 포인트 (Step 6-0에서 직접 수정해보기)**:
-    * `tests/test_api.py` 73번 줄을 보면 `response.status_code == 400` 앞에 **`assert`** 키워드가 빠져 있습니다! 파이썬에서 `assert` 없이 비교식만 쓰면 결과가 `False`여도 에러가 나지 않고 조용히 넘어가는 **'가짜 통과(Silent False-Positive)'** 함정이 됩니다. (`app/api/main.py` 자체는 정확히 400을 반환하고 있으니 `assert`만 붙여주시면 완벽합니다!)
-  * Step 6 가이드([`step-06-depends-and-settings.md`](./missions/fastapi/step-06-depends-and-settings.md)) 오픈.
+  * `python-multipart` 설치 및 `POST /jobs/upload` (`async def`, `await file.read()`) 구현 완료.
 * **2026-10-25 (Step 4 완료)**:
-  * `pytest.ini` (`pythonpath = .`) 및 `tests/test_api.py` 5대 시나리오 테스트 작성 완료 (`5 passed`).
+  * `pytest.ini` 및 `tests/test_api.py` 5대 시나리오 테스트 작성 완료.
 * **2026-10-25 (Step 3 완료)**:
   * `GET /jobs/{job_id}` (404 예외 처리) 및 `GET /jobs` (`status`, `limit` 쿼리 필터링) 구현 완료.
 * **2026-10-25 (Step 2 완료)**:
