@@ -41,8 +41,8 @@ def test_list_jobs_filter_and_limit():
     response2 = client.get("/jobs?status=completed")
     response3 = client.get("/jobs?limit=1")
 
-    assert len(response1.json()) == 2
-    assert len(response2.json()) == 0
+    assert len(response1.json()) == 0
+    assert len(response2.json()) == 2
     assert len(response3.json()) == 1
 
 def test_invalid_job_returns_422():
@@ -92,3 +92,14 @@ def test_settings_override(tmp_path: Path):
         assert (tmp_path / "override_test.txt").exists()
     finally:
         app.dependency_overrides.clear()
+
+def test_readyz_and_background_worker():
+    response1 = client.get("/readyz")
+    assert response1.status_code == 200
+    assert response1.json()["status"] == "ready"
+
+    response2 = client.post("/jobs", json={"task_type": "resize", "target_file": "photo1.png", "priority": 3})
+    assert response2.json()["status"] == "pending"
+
+    response3 = client.get(f"/jobs/{response2.json()["job_id"]}")
+    assert response3.json()["status"] == "completed"

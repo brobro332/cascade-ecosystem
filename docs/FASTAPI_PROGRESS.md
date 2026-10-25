@@ -17,30 +17,31 @@
 | **Step 4** | **`pytest`로 내 API 자동 테스트하기** | `TestClient`, `httpx.AsyncClient`, 단위 테스트 | [`step-04-pytest-testing.md`](./missions/fastapi/step-04-pytest-testing.md) | ✅ **완료** |
 | **Step 5** | **비동기 원리 (`async def` vs `def`) & 파일 업로드** | 이벤트 루프 블로킹 원리, `UploadFile`, 로컬 저장 | [`step-05-async-and-file-upload.md`](./missions/fastapi/step-05-async-and-file-upload.md) | ✅ **완료** |
 | **Step 6** | **의존성 주입 (`Depends`) & 환경변수 (`pydantic-settings`)** | `Depends`, `BaseSettings`, 설정 분리 & Mocking | [`step-06-depends-and-settings.md`](./missions/fastapi/step-06-depends-and-settings.md) | ✅ **완료** |
-| **Step 7** | **Lifespan 관리 & 백그라운드 워커/큐 연동** | `@asynccontextmanager`, `/readyz`, `BackgroundTasks` | [`step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md) | 🔄 **진행 중** |
-| **Step 8** | **공식 `kubernetes` Python Client 연동** | `BatchV1Api`로 K8s `Job` 동적 생성 (로컬 → 클러스터) | *(대기)* | ⏳ 대기 |
+| **Step 7** | **Lifespan 관리 & 백그라운드 워커/큐 연동** | `@asynccontextmanager`, `/readyz`, `BackgroundTasks` | [`step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md) | ✅ **완료** |
+| **Step 8** | **공식 `kubernetes` Python Client 연동** | `BatchV1Api`로 K8s `Job` 동적 생성 (로컬 → 클러스터) | [`step-08-kubernetes-client.md`](./missions/fastapi/step-08-kubernetes-client.md) | 🔄 **진행 중** |
 
 ---
 
 ## 📌 현재 활성 미션 요약
-* **현재 스텝**: **Step 7 — Lifespan 관리 (`/readyz`) & 백그라운드 워커 (`BackgroundTasks`)**
-* **가이드 위치**: [`docs/missions/fastapi/step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md)
+* **현재 스텝**: **Step 8 (최종 미션) — 공식 `kubernetes` Python Client로 K8s `Job` 동적 생성하기**
+* **가이드 위치**: [`docs/missions/fastapi/step-08-kubernetes-client.md`](./missions/fastapi/step-08-kubernetes-client.md)
 * **체크 대상**:
-  1. `app/worker/processor.py` 생성 및 `process_job_in_background` 구현 여부
-  2. `app/api/main.py`에 `@asynccontextmanager` 기반 `lifespan` 및 `GET /readyz` 추가 여부
-  3. `POST /jobs`, `POST /jobs/upload`에 `BackgroundTasks` 연동 여부
-  4. `tests/test_api.py` 업데이트 및 `pytest -v` (`9 passed`) 통과 여부
+  1. `kubernetes` 패키지 설치 및 `requirements.txt` 추가 여부
+  2. `app/api/k8s_client.py` (`build_k8s_job_object`, `K8sJobDispatcher`, `get_k8s_dispatcher`) 작성 여부
+  3. `app/api/main.py`에 `POST /jobs/k8s` 엔드포인트 구현 여부
+  4. `tests/test_api.py`에서 `FakeK8sDispatcher` (`dependency_overrides`)를 통한 `V1Job` 매니페스트 검증 및 `10 passed` 통과 여부
 
 ---
 
 ## 📝 학습 히스토리 & 코드 리뷰 노트 (Agent Updated)
-* **2026-10-25 (Step 6 완료)**:
-  * `app/api/config.py`에 `Settings(BaseSettings)` 및 `get_settings()` 구현 완료.
-  * `app/api/main.py`에서 함수 매개변수(`settings: Settings = Depends(get_settings)`)를 통한 의존성 주입 적용 완료.
-  * `tests/test_api.py` 74번 줄 `assert response.status_code == 400` 보완 및 `app.dependency_overrides[get_settings]`를 활용한 임시 폴더(`tmp_path`) 오버라이드 테스트 통과 (`8 passed in 0.53s`).
+* **2026-10-25 (Step 7 완료)**:
+  * `app/worker/processor.py`에 `process_job_in_background` 구현 (노드명, `platform.machine()` 아키텍처 메타데이터 포함, `model_copy(update=...)` 활용).
+  * `app/api/main.py`에 `@asynccontextmanager` 기반 `lifespan`, `GET /readyz`(Readiness Probe), `BackgroundTasks` 연동 완료.
   * **💡 오답/디버깅 노트**:
-    * `Depends(...)`는 함수 몸통(Body) 안이 아니라 반드시 **엔드포인트 함수의 매개변수 괄호 안**에 선언해야 FastAPI가 호출 시점에 실제 객체로 주입해 줌을 직접 경험하며 체득!
-  * Step 7 가이드([`step-07-lifespan-and-background-worker.md`](./missions/fastapi/step-07-lifespan-and-background-worker.md)) 오픈.
+    * `app = FastAPI(lifespan=lifespan)` 선언 아래에 기존 `app = FastAPI()`가 중복으로 남아 있으면 `app` 인스턴스가 덮어씌워져 `app.state.is_ready`가 유실되고 `/readyz`에서 `503 Service Unavailable`이 발생하는 원리를 디버깅하며 완벽히 이해함!
+  * `pytest -v` (`9 passed in 0.51s`) 통과 및 최종 미션 Step 8 가이드([`step-08-kubernetes-client.md`](./missions/fastapi/step-08-kubernetes-client.md)) 오픈.
+* **2026-10-25 (Step 6 완료)**:
+  * `app/api/config.py` (`BaseSettings`) 및 `Depends(get_settings)`, `dependency_overrides` 테스트 통과 (`8 passed`).
 * **2026-10-25 (Step 5 완료)**:
   * `python-multipart` 설치 및 `POST /jobs/upload` (`async def`, `await file.read()`) 구현 완료.
 * **2026-10-25 (Step 4 완료)**:
