@@ -1,9 +1,11 @@
-from fastapi import FastAPI, HTTPException, Query
-from app.api.schemas import JobCreateRequest, JobResponse, JobStatus
+from fastapi import FastAPI, HTTPException, Query, UploadFile, File, Form
+from app.api.schemas import JobCreateRequest, JobResponse, JobStatus, TaskType
+from pathlib import Path
 import uuid
 
 app = FastAPI()
 jobs_db: dict[str, JobResponse] = {}
+UPLOAD_DIR = Path("storage/uploads")
 
 @app.get("/")
 def read_root():
@@ -47,3 +49,31 @@ def list_jobs(
         filtered_jobs = jobs
 
     return filtered_jobs[:limit]
+
+@app.post("/jobs/upload", status_code=201)
+async def upload_job(
+    file: UploadFile = File(..., description="업로드할 원본 파일"),
+    task_type: TaskType = Form(default=TaskType.RESIZE, description="작업 종류"),
+    priority: int = Form(default=3, ge=1, le=5, description="우선순위 (1~5)"
+)) -> JobResponse:
+    contents = await file.read()
+    if len(contents) == 0 or not contents:
+        raise HTTPException(status_code=400, detail="Empty file is not allowed")
+    else:
+        UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        file_path = UPLOAD_DIR / file.filename
+        file_path.write_bytes(contents)
+        
+        new_id = f"job-{uuid.uuid4().hex[:8]}"
+        new_job = JobResponse(
+            job_id=new_id,
+            target_file=file.filename,
+            task_type=task_type,
+            priority=priority,
+            status=JobStatus.PENDING,
+            message="File uploaded and job submitted"
+        )
+
+        jobs_db[new_id] = new_job
+
+        return new_job

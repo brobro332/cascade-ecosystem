@@ -2,3 +2,4 @@ fastapi[standard]
 pytest
 httpx
 httpx2
+python-multipart

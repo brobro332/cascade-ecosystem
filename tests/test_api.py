@@ -1,6 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.api.main import app, jobs_db
+from pathlib import Path
 
 client = TestClient(app)
 
@@ -49,3 +50,24 @@ def test_invalid_job_returns_422():
 
     assert response1.status_code == 422
     assert response2.status_code == 422
+
+def test_upload_job_success():
+    response = client.post(
+        "/jobs/upload",
+        files={"file": ("test_image.png", b"fake-image-binary-content", "image/png")},
+        data={"task_type": "watermark", "priority": "1"},
+    )
+
+    assert response.status_code == 201
+    assert response.json()["target_file"] == "test_image.png"
+    assert response.json()["task_type"] == "watermark"
+    assert Path("storage/uploads/test_image.png").exists()
+
+def test_upload_empty_file_returns_400():
+    response = client.post(
+        "/jobs/upload",
+        files={"file": ("test_image.png", b"", "image/png")},
+        data={"task_type": "watermark", "priority": "1"},
+    )
+
+    assert response.status_code == 400
