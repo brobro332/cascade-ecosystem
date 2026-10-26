@@ -65,5 +65,6 @@
 * **노드 전원 On/Off 및 클러스터 점검 시**: `.agents/skills/cluster-node-lifecycle` 스킬 참조.
 * **학습 진도 확인 및 미션 관리 규칙**:
   * 전체 로드맵: [`docs/LEARNING_ROADMAP.md`](./docs/LEARNING_ROADMAP.md)
-  * **FastAPI 진행 상황판 (에이전트 상시 업데이트 필수)**: [`docs/FASTAPI_PROGRESS.md`](./docs/FASTAPI_PROGRESS.md)
+  * **FastAPI 진행 상황판 (완주 완료)**: [`docs/FASTAPI_PROGRESS.md`](./docs/FASTAPI_PROGRESS.md)
+  * **CKA 진행 상황판 & 트러블슈팅 노트 (에이전트 상시 업데이트 필수)**: [`docs/CKA_PROGRESS.md`](./docs/CKA_PROGRESS.md)
   * **단계별 미션 가이드 전용 폴더**: 새로운 스텝을 진행할 때마다 반드시 [`docs/missions/fastapi/`](./docs/missions/fastapi/) 또는 [`docs/missions/cka/`](./docs/missions/cka/) 아래에 개별 마크다운 파일(`step-XX-*.md`)로 미션 가이드를 생성하여 관리합니다.
