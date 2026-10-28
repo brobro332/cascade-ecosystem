@@ -14,9 +14,9 @@
 - [ ] **1-5. `etcd` 백업 및 복구 (CKA 단골 문제)**: `etcdctl snapshot save` 및 `etcdctl snapshot restore` 실전 연습
 
 ### Phase 2. Storage & Configuration (배점 10%) — `k8s/02-storage-config/`
-- [ ] **2-1. Namespace & ConfigMap/Secret**: `kube-pipeline` 네임스페이스 생성, 환경설정(`ConfigMap`) 및 민감정보(`Secret`) 명령형 생성(`$do`)
-- [ ] **2-2. PersistentVolume (PV) & PersistentVolumeClaim (PVC)**: 미디어/문서 원본 및 결과물을 저장할 공유 스토리지(`HostPath` / `NFS`) 바인딩
-- [ ] **2-3. Pod 볼륨 마운트 & 환경변수 주입**: `envFrom`, `valueFrom`, `volumeMounts` 실습
+- [x] **2-1. Namespace & ConfigMap/Secret**: `kube-pipeline` 네임스페이스 생성, 환경설정(`ConfigMap`) 및 민감정보(`Secret`) 명령형 생성(`$do`)
+- [x] **2-2. PersistentVolume (PV) & PersistentVolumeClaim (PVC)**: 미디어/문서 원본 및 결과물을 저장할 공유 스토리지(`HostPath` / `NFS`) 바인딩
+- [x] **2-3. Pod 볼륨 마운트 & 환경변수 주입**: `envFrom`, `valueFrom`, `volumeMounts` 실습
 
 ### Phase 3. Workloads & Multi-Container Pod (배점 15%) — `k8s/03-workloads-sidecar/`
 - [ ] **3-1. Redis Queue 배포**: `redis:alpine` Deployment, `resources.requests/limits` 설정

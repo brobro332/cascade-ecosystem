@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pipeline-storage-pod
+  namespace: kube-pipeline
+spec:
+  containers:
+    - name: api
+      image: kube-pipeline-api:v1
+      imagePullPolicy: Never
+      ports:
+        - containerPort: 8000
+      # 1. ConfigMap과 Secret의 모든 키-값을 환경변수로 한 번에 주입!
+      envFrom:
+        - configMapRef:
+            name: pipeline-config
+        - secretRef:
+            name: pipeline-secret
+      # 2. 컨테이너 안의 /app/storage/uploads 폴더에 외장하드(볼륨) 연결!
+      volumeMounts:
+        - name: shared-storage
+          mountPath: "/app/storage/uploads"
+  # 3. 사용할 외장하드(PVC) 신청서 지정
+  volumes:
+    - name: shared-storage
+      persistentVolumeClaim:
+        claimName: pipeline-pvc
